@@ -104,7 +104,14 @@ export async function toggleReaction({ messageId, conversationId, userId, emoji,
   if (error && error.code !== '23505') throw error
 }
 
-export const markRead = (conversationId) => supabase.rpc('mark_conversation_read', { cid: conversationId })
-export const markDelivered = (conversationId = null) => supabase.rpc('mark_messages_delivered', { cid: conversationId })
+export async function markRead(conversationId) {
+  const { error } = await supabase.rpc('mark_conversation_read', { cid: conversationId })
+  if (error) throw error
+}
+
+export async function markDelivered(conversationId = null) {
+  const { error } = await supabase.rpc('mark_messages_delivered', { cid: conversationId })
+  if (error) throw error
+}
 
 export const mediaUrl = (message) => getSignedUrl(bucketFor(message.message_type), message.media_url)
