@@ -26,7 +26,9 @@ export async function endStream(id) {
   await supabase.from('live_streams').update({ is_active: false, ended_at: new Date().toISOString(), viewer_count: 0 }).eq('id', id)
 }
 
-export const setViewerCount = (id, n) => supabase.from('live_streams').update({ viewer_count: n }).eq('id', id)
+export async function setViewerCount(id, n) {
+  await supabase.from('live_streams').update({ viewer_count: n }).eq('id', id)
+}
 
 export async function fetchLiveComments(streamId) {
   const { data, error } = await supabase.from('live_comments')
@@ -41,10 +43,13 @@ export async function sendLiveComment(streamId, userId, content) {
   if (error) throw error
 }
 
+const turnUrls = (import.meta.env.VITE_TURN_URL || '')
+  .split(',').map((u) => u.trim()).filter(Boolean)
+
 export const ICE_SERVERS = [
   { urls: ['stun:stun.l.google.com:19302', 'stun:stun1.l.google.com:19302'] },
-  ...(import.meta.env.VITE_TURN_URL ? [{
-    urls: import.meta.env.VITE_TURN_URL,
+  ...(turnUrls.length ? [{
+    urls: turnUrls,
     username: import.meta.env.VITE_TURN_USERNAME,
     credential: import.meta.env.VITE_TURN_CREDENTIAL,
   }] : []),
