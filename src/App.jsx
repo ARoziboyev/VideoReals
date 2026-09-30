@@ -22,6 +22,7 @@ import PostPage from './pages/PostPage'
 import Live from './pages/Live'
 import LiveRoom from './pages/LiveRoom'
 import Settings from './pages/Settings'
+import Music from './pages/Music'
 
 export default function App() {
   const navigate = useNavigate()
@@ -72,6 +73,7 @@ export default function App() {
           <Route path="p/:id" element={<PostPage />} />
           <Route path="live" element={<Live />} />
           <Route path="live/:id" element={<LiveRoom />} />
+          <Route path="music" element={<Music />} />
           <Route path="settings" element={<Settings />} />
           <Route path="settings/:section" element={<Settings />} />
         </Route>

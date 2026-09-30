@@ -11,10 +11,11 @@ export const BUCKET_RULES = {
   stories: { max: 50 * MB, types: ['image/', 'video/'] },
   'chat-media': { max: 50 * MB, types: null },
   'voice-messages': { max: 10 * MB, types: ['audio/'] },
+  music: { max: 20 * MB, types: ['audio/'] },
 }
-export const PUBLIC_BUCKETS = ['avatars', 'videos', 'images', 'thumbnails', 'stories']
+export const PUBLIC_BUCKETS = ['avatars', 'videos', 'images', 'thumbnails', 'stories', 'music']
 
-const EXT = { 'audio/webm': 'webm', 'audio/ogg': 'ogg', 'audio/mp4': 'm4a', 'audio/mpeg': 'mp3', 'image/jpeg': 'jpg', 'image/png': 'png', 'image/webp': 'webp', 'video/mp4': 'mp4', 'video/webm': 'webm' }
+const EXT = { 'audio/webm': 'webm', 'audio/wav': 'wav', 'audio/x-m4a': 'm4a', 'image/gif': 'gif', 'audio/ogg': 'ogg', 'audio/mp4': 'm4a', 'audio/mpeg': 'mp3', 'image/jpeg': 'jpg', 'image/png': 'png', 'image/webp': 'webp', 'video/mp4': 'mp4', 'video/webm': 'webm' }
 
 export function validateFile(file, bucket) {
   const rule = BUCKET_RULES[bucket]

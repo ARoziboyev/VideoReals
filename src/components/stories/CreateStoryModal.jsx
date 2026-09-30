@@ -3,6 +3,7 @@ import { ImagePlus, Type } from 'lucide-react'
 import toast from 'react-hot-toast'
 import Modal from '../common/Modal'
 import Spinner from '../common/Spinner'
+import AudiencePicker from '../common/AudiencePicker'
 import { useUIStore } from '../../store/uiStore'
 import { useAuthStore } from '../../store/authStore'
 import { createStory } from '../../services/storyService'
@@ -29,10 +30,11 @@ export default function CreateStoryModal() {
   const [text, setText] = useState('')
   const [bg, setBg] = useState(BACKGROUNDS[0])
   const [busy, setBusy] = useState(false)
+  const [visibility, setVisibility] = useState('public')
   const ref = useRef(null)
 
   useEffect(() => {
-    if (!storyOpen) { if (preview) URL.revokeObjectURL(preview); setFile(null); setPreview(null); setText(''); setMode('media') }
+    if (!storyOpen) { if (preview) URL.revokeObjectURL(preview); setFile(null); setPreview(null); setText(''); setMode('media'); setVisibility('public') }
   }, [storyOpen])
 
   const pick = (f) => {
@@ -48,7 +50,7 @@ export default function CreateStoryModal() {
     setBusy(true)
     try {
       const mediaType = mode === 'text' ? 'text' : file.type.startsWith('video/') ? 'video' : 'image'
-      await createStory({ userId: user.id, file, mediaType, text, background: mode === 'text' ? bg : null })
+      await createStory({ userId: user.id, file, mediaType, text, background: mode === 'text' ? bg : null, visibility })
       toast.success('Story shared')
       window.dispatchEvent(new Event('vm:story-created'))
       setStoryOpen(false)
@@ -92,6 +94,7 @@ export default function CreateStoryModal() {
             </div>
           </>
         )}
+        <div className="mt-4"><AudiencePicker value={visibility} onChange={setVisibility} /></div>
         <button className="btn-primary mt-4 w-full" disabled={!canSubmit || busy} onClick={submit}>
           {busy ? <><Spinner size={16} className="text-white" /> Sharing</> : 'Share story'}
         </button>

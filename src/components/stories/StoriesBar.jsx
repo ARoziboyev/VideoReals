@@ -58,7 +58,8 @@ export default function StoriesBar() {
         </div>
         {groups.map((g, i) => g.user?.id === user.id ? null : (
           <button key={g.user?.id} onClick={() => setOpenIndex(i)} className="flex w-[72px] shrink-0 flex-col items-center gap-1.5">
-            <Avatar src={g.user?.avatar_url} name={fullName(g.user)} size={66} ring={g.stories.every((s) => viewed.has(s.id)) ? 'seen' : 'active'} />
+            <Avatar src={g.user?.avatar_url} name={fullName(g.user)} size={66}
+              ring={g.stories.every((s) => viewed.has(s.id)) ? 'seen' : g.stories.some((s) => s.visibility === 'friends' && !viewed.has(s.id)) ? 'friends' : 'active'} />
             <span className="w-full truncate text-center text-xs text-fg/70">{g.user?.username}</span>
           </button>
         ))}

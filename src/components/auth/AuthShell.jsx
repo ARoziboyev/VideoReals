@@ -6,19 +6,48 @@ export default function AuthShell({ title, subtitle, children, footer }) {
   return (
     <div className="grid min-h-[100dvh] lg:grid-cols-[1.1fr_1fr]">
       <Backdrop />
-      <div className="relative hidden flex-col justify-between p-12 lg:flex">
+      <div className="relative hidden flex-col justify-between overflow-hidden p-12 lg:flex">
         <Logo size={40} />
-        <div>
-          <h1 className="max-w-lg font-display text-5xl font-semibold leading-[1.05] tracking-tight">
-            Share the moment.<br />Talk about it right there.
-          </h1>
-          <p className="mt-5 max-w-md text-base text-fg/60">Short videos, stories, live streams and chats — in one place, synced in real time.</p>
+        <div className="relative mx-auto h-[26rem] w-full max-w-lg">
+          {/* reel card */}
+          <motion.div initial={{ opacity: 0, y: 30, rotate: -10 }} animate={{ opacity: 1, y: 0, rotate: -7 }} transition={{ duration: 0.9, ease: [0.16, 1, 0.3, 1] }}
+            className="glass-card absolute left-4 top-6 h-[22rem] w-52 overflow-hidden p-2">
+            <div className="relative h-full w-full overflow-hidden rounded-[1.3rem]"
+              style={{ background: 'radial-gradient(90% 70% at 30% 20%, #8B5CF6, transparent 60%), radial-gradient(80% 60% at 80% 90%, #EC4899, transparent 60%), #111133' }}>
+              <div className="absolute bottom-3 left-3 right-12 space-y-1.5">
+                <div className="flex items-center gap-2"><span className="h-6 w-6 rounded-full bg-white/80" /><span className="h-2 w-16 rounded-full bg-white/70" /></div>
+                <span className="block h-2 w-28 rounded-full bg-white/40" />
+              </div>
+              <div className="absolute bottom-3 right-2 flex flex-col gap-2">
+                {[0, 1, 2].map((i) => <span key={i} className="h-7 w-7 rounded-full border border-white/25 bg-white/15 backdrop-blur" />)}
+              </div>
+            </div>
+          </motion.div>
+          {/* chat card */}
+          <motion.div initial={{ opacity: 0, y: 40, rotate: 8 }} animate={{ opacity: 1, y: 0, rotate: 5 }} transition={{ duration: 0.9, delay: 0.12, ease: [0.16, 1, 0.3, 1] }}
+            className="glass-card absolute right-2 top-20 w-64 space-y-2.5 p-4">
+            <div className="flex items-center gap-2.5 border-b border-line pb-3">
+              <span className="h-8 w-8 rounded-full" style={{ background: 'linear-gradient(135deg,#4F7CFF,#EC4899)' }} />
+              <div className="space-y-1"><span className="block h-2 w-20 rounded-full bg-fg/60" /><span className="block h-1.5 w-12 rounded-full bg-emerald-400/70" /></div>
+            </div>
+            <div className="w-40 rounded-2xl rounded-bl-md bg-fg/10 px-3 py-2 text-xs text-fg/80">did you see the new reel? 🔥</div>
+            <div className="ml-auto w-36 rounded-2xl rounded-br-md px-3 py-2 text-xs text-white" style={{ background: 'linear-gradient(135deg,#7C4DFF,#4F7CFF)' }}>calling you in 5 min</div>
+            <div className="flex w-32 items-center gap-2 rounded-2xl bg-fg/10 px-3 py-2">
+              <span className="vm-eq flex h-3 items-end gap-[2px] text-violet-300"><span style={{ height: '100%' }} /><span style={{ height: '100%' }} /><span style={{ height: '100%' }} /></span>
+              <span className="h-1 flex-1 rounded-full bg-fg/25" />
+            </div>
+          </motion.div>
+          {/* live pill */}
+          <motion.div initial={{ opacity: 0, scale: 0.8 }} animate={{ opacity: 1, scale: 1 }} transition={{ delay: 0.35, type: 'spring', damping: 16 }}
+            className="absolute bottom-6 left-40 flex items-center gap-2 rounded-full px-4 py-2 glass-strong">
+            <span className="h-2 w-2 animate-pulse rounded-full bg-rose-500" /><span className="text-xs font-bold">LIVE</span><span className="text-xs text-fg/55">2.4K watching</span>
+          </motion.div>
         </div>
-        <div className="flex gap-3">
-          {['🎬', '💬', '🔴'].map((e, i) => (
-            <motion.div key={e} initial={{ y: 12, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ delay: 0.15 + i * 0.08 }}
-              className="glass grid h-16 w-16 place-items-center rounded-2xl text-2xl">{e}</motion.div>
-          ))}
+        <div>
+          <h1 className="max-w-lg font-display text-[2.6rem] font-semibold leading-[1.05] tracking-tight">
+            Share the moment.<br /><span className="text-gradient">Talk about it right there.</span>
+          </h1>
+          <p className="mt-4 max-w-md text-base text-fg/60">Short videos, stories, live streams, calls and chats — synced in real time.</p>
         </div>
       </div>
       <div className="flex items-center justify-center p-5 sm:p-8">

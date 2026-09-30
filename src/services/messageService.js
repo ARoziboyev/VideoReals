@@ -47,7 +47,7 @@ export function detectType(file) {
   return 'file'
 }
 
-export async function sendMessage({ conversationId, senderId, receiverId = null, content = '', type = 'text', file = null, duration = null, replyTo = null }) {
+export async function sendMessage({ conversationId, senderId, receiverId = null, content = '', type = 'text', file = null, duration = null, replyTo = null, meta = null }) {
   let media_url = null
   if (file) media_url = await uploadFile(bucketFor(type), file, `${conversationId}/${senderId}`)
   const { data, error } = await supabase.from('messages').insert({
@@ -61,6 +61,7 @@ export async function sendMessage({ conversationId, senderId, receiverId = null,
     file_size: file?.size || null,
     duration,
     reply_to: replyTo,
+    meta,
   }).select().single()
   if (error) throw error
   return data

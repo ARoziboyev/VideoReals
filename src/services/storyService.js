@@ -21,13 +21,14 @@ export async function getViewedIds(ids, userId) {
   return new Set((data || []).map((r) => r.story_id))
 }
 
-export async function createStory({ userId, file, mediaType, text, background }) {
+export async function createStory({ userId, file, mediaType, text, background, visibility = 'public' }) {
   let media_url = null
   if (mediaType !== 'text') media_url = await uploadFile('stories', file, userId)
   const { data, error } = await supabase.from('stories').insert({
     user_id: userId, media_type: mediaType, media_url,
     text_content: mediaType === 'text' ? text.trim() : (text?.trim() || null),
     background: background || null,
+    visibility,
   }).select().single()
   if (error) throw error
   return data

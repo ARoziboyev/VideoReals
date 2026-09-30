@@ -3,6 +3,7 @@ import { UploadCloud, ImagePlus, RefreshCw } from 'lucide-react'
 import toast from 'react-hot-toast'
 import Modal from '../common/Modal'
 import Spinner from '../common/Spinner'
+import AudiencePicker from '../common/AudiencePicker'
 import { useUIStore } from '../../store/uiStore'
 import { useAuthStore } from '../../store/authStore'
 import { createPost } from '../../services/videoService'
@@ -19,6 +20,7 @@ export default function UploadPostModal() {
   const [thumb, setThumb] = useState(null)
   const [thumbPreview, setThumbPreview] = useState(null)
   const [caption, setCaption] = useState('')
+  const [visibility, setVisibility] = useState('public')
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState('')
   const fileRef = useRef(null)
@@ -29,7 +31,7 @@ export default function UploadPostModal() {
   const reset = () => {
     if (preview) URL.revokeObjectURL(preview)
     if (thumbPreview) URL.revokeObjectURL(thumbPreview)
-    setFile(null); setPreview(null); setThumb(null); setThumbPreview(null); setCaption(''); setError('')
+    setFile(null); setPreview(null); setThumb(null); setThumbPreview(null); setCaption(''); setError(''); setVisibility('public')
   }
   useEffect(() => { if (!uploadType) reset() }, [uploadType])
 
@@ -37,7 +39,9 @@ export default function UploadPostModal() {
     if (!f) return
     setError('')
     try { validateFile(f, bucket) } catch (e) { setError(e.message); return }
+    const keep = visibility
     reset()
+    setVisibility(keep)
     setFile(f); setPreview(URL.createObjectURL(f))
     if (f.type.startsWith('video/')) {
       const th = await captureVideoThumbnail(f)
@@ -57,7 +61,7 @@ export default function UploadPostModal() {
     setBusy(true); setError('')
     const id = toast.loading('Uploading…')
     try {
-      const post = await createPost({ userId: user.id, file, thumbnail: isVideo ? thumb : null, caption, mediaType: uploadType })
+      const post = await createPost({ userId: user.id, file, thumbnail: isVideo ? thumb : null, caption, mediaType: uploadType, visibility })
       toast.success('Post published', { id })
       window.dispatchEvent(new CustomEvent('vm:post-created', { detail: post }))
       setUploadType(null)
@@ -113,6 +117,7 @@ export default function UploadPostModal() {
               </div>
             </div>
           )}
+          <AudiencePicker value={visibility} onChange={setVisibility} />
           {error && <p className="rounded-xl bg-rose-500/10 px-3 py-2 text-sm text-rose-400">{error}</p>}
           <div className="mt-auto flex justify-end gap-2">
             <button className="btn-ghost" disabled={busy} onClick={() => setUploadType(null)}>Cancel</button>

@@ -1,12 +1,12 @@
 import { useState } from 'react'
 import { motion } from 'framer-motion'
-import { Check, CheckCheck, ChevronDown, Reply, Pencil, Copy, Forward, Trash2, FileText, Download, Clock } from 'lucide-react'
+import { Check, CheckCheck, ChevronDown, Reply, Pencil, Copy, Forward, Trash2, FileText, Download, Clock, Phone, PhoneMissed, Video, StickyNote } from 'lucide-react'
 import Avatar from '../common/Avatar'
 import AudioPlayer from './AudioPlayer'
 import { QUICK_REACTIONS } from './EmojiPicker'
 import { useSignedUrl } from '../../hooks/useSignedUrl'
 import { bucketFor } from '../../services/messageService'
-import { clockTime, cn, formatBytes, fullName } from '../../lib/utils'
+import { clockTime, cn, formatBytes, formatDuration, fullName } from '../../lib/utils'
 
 function Media({ m, mine }) {
   const { url, error } = useSignedUrl(bucketFor(m.message_type), m.media_url)
@@ -35,8 +35,29 @@ function Status({ m }) {
   return <Check size={15} className="opacity-75" />
 }
 
-export default function MessageBubble({ m, mine, sender, showSender, replied, reactions = [], meId, onReply, onEdit, onDelete, onCopy, onForward, onReact }) {
+function CallLog({ m, mine, onCallBack }) {
+  const video = m.meta?.kind === 'video'
+  const status = m.meta?.status
+  const missed = status !== 'completed'
+  const Icon = missed ? PhoneMissed : video ? Video : Phone
+  const label = missed ? (mine ? (status === 'declined' ? 'Call declined' : 'No answer') : 'Missed call') : (video ? 'Video call' : 'Voice call')
+  return (
+    <motion.div initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} className={cn('flex', mine ? 'justify-end' : 'justify-start pl-9')}>
+      <div className="flex items-center gap-3 rounded-2xl px-3.5 py-2.5 glass">
+        <span className={cn('grid h-10 w-10 place-items-center rounded-full', missed ? 'bg-rose-500/15 text-rose-400' : 'bg-emerald-500/15 text-emerald-400')}><Icon size={18} /></span>
+        <div>
+          <p className="text-sm font-semibold">{label}</p>
+          <p className="text-xs text-fg/50">{clockTime(m.created_at)}{!missed && ` · ${formatDuration(m.meta?.duration)}`}</p>
+        </div>
+        {onCallBack && <button onClick={() => onCallBack(video ? 'video' : 'audio')} className="ml-2 rounded-full bg-fg/10 px-3 py-1.5 text-xs font-bold hover:bg-fg/15">Call back</button>}
+      </div>
+    </motion.div>
+  )
+}
+
+export default function MessageBubble({ m, mine, sender, showSender, replied, reactions = [], meId, onReply, onEdit, onDelete, onCopy, onForward, onReact, onCallBack }) {
   const [menu, setMenu] = useState(false)
+  if (m.message_type === 'call') return <CallLog m={m} mine={mine} onCallBack={onCallBack} />
   const grouped = Object.entries(reactions.reduce((acc, r) => { (acc[r.emoji] ||= []).push(r.user_id); return acc }, {}))
   const deleted = m.is_deleted
 
@@ -52,6 +73,11 @@ export default function MessageBubble({ m, mine, sender, showSender, replied, re
           deleted && 'opacity-60')}
           style={mine ? { backgroundImage: 'linear-gradient(135deg,#7C4DFF,#4F7CFF)' } : undefined}>
           {m.forwarded && !deleted && <p className="mb-1 flex items-center gap-1 text-[11px] italic opacity-75"><Forward size={11} /> Forwarded</p>}
+          {m.meta?.note_text && !deleted && (
+            <div className={cn('mb-1.5 flex items-center gap-1.5 rounded-lg px-2 py-1 text-xs', mine ? 'bg-white/15' : 'bg-fg/5')}>
+              <StickyNote size={12} className="shrink-0 opacity-75" /><span className="line-clamp-1 opacity-85">{mine ? 'Replied to a note' : 'Replied to your note'}: “{m.meta.note_text}”</span>
+            </div>
+          )}
           {replied && !deleted && (
             <div className={cn('mb-1.5 rounded-lg border-l-2 px-2 py-1 text-xs', mine ? 'border-white/70 bg-white/15' : 'border-violet-400 bg-fg/5')}>
               <p className="line-clamp-2 opacity-85">{replied.is_deleted ? 'Deleted message' : replied.content || `[${replied.message_type}]`}</p>

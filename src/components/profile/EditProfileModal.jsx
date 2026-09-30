@@ -1,11 +1,11 @@
 import { useEffect, useRef, useState } from 'react'
-import { Camera } from 'lucide-react'
+import { Camera, ImagePlus } from 'lucide-react'
 import toast from 'react-hot-toast'
 import Modal from '../common/Modal'
 import Avatar from '../common/Avatar'
 import Spinner from '../common/Spinner'
 import { useAuthStore } from '../../store/authStore'
-import { updateProfile, uploadAvatar } from '../../services/profileService'
+import { updateProfile, uploadAvatar, uploadCover } from '../../services/profileService'
 import { validateFile } from '../../services/storageService'
 import { saveAccount } from '../../services/accountService'
 import { errorMessage, fullName } from '../../lib/utils'
@@ -17,13 +17,16 @@ export default function EditProfileModal({ open, onClose, onSaved }) {
   const [form, setForm] = useState({ first_name: '', last_name: '', username: '', bio: '' })
   const [avatar, setAvatar] = useState(null)
   const [preview, setPreview] = useState(null)
+  const [cover, setCover] = useState(null)
+  const [coverPreview, setCoverPreview] = useState(null)
+  const coverRef = useRef(null)
   const [busy, setBusy] = useState(false)
   const ref = useRef(null)
 
   useEffect(() => {
     if (open && profile) {
       setForm({ first_name: profile.first_name || '', last_name: profile.last_name || '', username: profile.username, bio: profile.bio || '' })
-      setAvatar(null); setPreview(null)
+      setAvatar(null); setPreview(null); setCover(null); setCoverPreview(null)
     }
   }, [open, profile])
 
@@ -39,6 +42,7 @@ export default function EditProfileModal({ open, onClose, onSaved }) {
     try {
       let p = await updateProfile(profile.id, { first_name: form.first_name.trim(), last_name: form.last_name.trim(), username: form.username, bio: form.bio.trim() })
       if (avatar) p = await uploadAvatar(profile.id, avatar, profile.avatar_url)
+      if (cover) p = await uploadCover(profile.id, cover, profile.cover_url)
       setProfile(p); saveAccount(session, p); onSaved?.(p)
       toast.success('Profile updated'); onClose()
     } catch (err) { toast.error(errorMessage(err)) }
@@ -50,6 +54,18 @@ export default function EditProfileModal({ open, onClose, onSaved }) {
   return (
     <Modal open={open} onClose={() => !busy && onClose()} title={t('editProfile')} size="md">
       <form onSubmit={save} className="space-y-4 p-5">
+        <button type="button" onClick={() => coverRef.current?.click()} className="glass-edge group relative block h-28 w-full overflow-hidden rounded-2xl bg-fg/5">
+          {coverPreview || profile?.cover_url
+            ? <img src={coverPreview || profile.cover_url} alt="" className="h-full w-full object-cover" />
+            : <div className="h-full w-full" style={{ background: 'linear-gradient(120deg,#7C3AED,#2563EB 55%,#DB2777)' }} />}
+          <span className="absolute inset-0 flex items-center justify-center gap-2 bg-black/40 text-sm font-semibold text-white opacity-0 transition group-hover:opacity-100 max-md:opacity-100"><ImagePlus size={18} />Change cover</span>
+        </button>
+        <input ref={coverRef} type="file" hidden accept="image/*" onChange={(e) => {
+          const f = e.target.files[0]; e.target.value = ''
+          if (!f) return
+          try { validateFile(f, 'images') } catch (err) { toast.error(err.message); return }
+          setCover(f); setCoverPreview(URL.createObjectURL(f))
+        }} />
         <div className="flex items-center gap-4">
           <button type="button" onClick={() => ref.current?.click()} className="group relative" aria-label="Change photo">
             <Avatar src={preview || profile?.avatar_url} name={fullName(profile)} size={84} />

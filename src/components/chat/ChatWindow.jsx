@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { ArrowLeft, Users, LogOut } from 'lucide-react'
+import { ArrowLeft, Users, LogOut, Phone, Video } from 'lucide-react'
 import toast from 'react-hot-toast'
 import supabase from '../../lib/supabase'
 import Avatar from '../common/Avatar'
@@ -13,6 +13,8 @@ import { useAuthStore } from '../../store/authStore'
 import { useUIStore } from '../../store/uiStore'
 import * as ms from '../../services/messageService'
 import { refreshUnreadCounts } from '../../hooks/useAppRealtime'
+import { startCall } from '../../services/callService'
+import { useT } from '../../lib/i18n'
 import { errorMessage, lastSeenText } from '../../lib/utils'
 
 function dayLabel(d) {
@@ -25,6 +27,7 @@ function dayLabel(d) {
 }
 
 export default function ChatWindow({ conversation, onBack, onLeft }) {
+  const t = useT()
   const me = useAuthStore((s) => s.user)
   const profile = useAuthStore((s) => s.profile)
   const onlineUsers = useUIStore((s) => s.onlineUsers)
@@ -160,6 +163,11 @@ export default function ChatWindow({ conversation, onBack, onLeft }) {
     catch (e) { toast.error(errorMessage(e)) }
   }
 
+  const call = async (kind) => {
+    if (!other) return
+    try { await startCall({ peer: other, kind, conversationId: cid }) } catch (e) { toast.error(e.message) }
+  }
+
   const byId = useMemo(() => Object.fromEntries(messages.map((m) => [m.id, m])), [messages])
   const typingNames = Object.values(typing)
   const status = typingNames.length
@@ -179,6 +187,12 @@ export default function ChatWindow({ conversation, onBack, onLeft }) {
             <p className={`truncate text-xs ${typingNames.length ? 'text-violet-400' : 'text-fg/50'}`}>{status}</p>
           </div>
         </Link>
+        {!conversation.is_group && other && (
+          <>
+            <button className="icon-btn" onClick={() => call('audio')} aria-label={t('voiceCall')} title={t('voiceCall')}><Phone size={20} /></button>
+            <button className="icon-btn" onClick={() => call('video')} aria-label={t('videoCall')} title={t('videoCall')}><Video size={21} /></button>
+          </>
+        )}
         {conversation.is_group && <button className="icon-btn" onClick={leave} aria-label="Leave group"><LogOut size={19} /></button>}
       </header>
 
@@ -198,7 +212,8 @@ export default function ChatWindow({ conversation, onBack, onLeft }) {
                 reactions={reactions.filter((r) => r.message_id === m.id)}
                 onReply={setReplyTo} onEdit={(x) => { setReplyTo(null); setEditing(x) }} onDelete={remove}
                 onCopy={(x) => { navigator.clipboard.writeText(x.content || ''); toast.success('Copied') }}
-                onForward={setForwarding} onReact={react} />
+                onForward={setForwarding} onReact={react}
+                onCallBack={!conversation.is_group && other ? call : undefined} />
             </div>
           )
         })}

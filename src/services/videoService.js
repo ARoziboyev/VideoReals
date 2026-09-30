@@ -82,7 +82,7 @@ export async function setSaved(postId, userId, save) {
   if (error && error.code !== '23505') throw error
 }
 
-export async function createPost({ userId, file, thumbnail, caption = '', mediaType }) {
+export async function createPost({ userId, file, thumbnail, caption = '', mediaType, visibility = 'public' }) {
   const isVideo = mediaType === 'video'
   const mediaUrl = await uploadFile(isVideo ? 'videos' : 'images', file, userId)
   let thumbUrl = null
@@ -95,6 +95,7 @@ export async function createPost({ userId, file, thumbnail, caption = '', mediaT
     thumbnail_url: thumbUrl || (isVideo ? null : mediaUrl),
     caption: caption.trim(),
     hashtags: parseHashtags(caption),
+    visibility,
   }).select(POST_SELECT).single()
   if (error) {
     removeByUrl(mediaUrl, isVideo ? 'videos' : 'images').catch(() => {})
@@ -109,4 +110,32 @@ export async function deletePost(post) {
   if (post.video_url) removeByUrl(post.video_url, 'videos').catch(() => {})
   if (post.image_url) removeByUrl(post.image_url, 'images').catch(() => {})
   if (post.thumbnail_url && post.thumbnail_url !== post.image_url) removeByUrl(post.thumbnail_url, 'thumbnails').catch(() => {})
+}
+
+export async function fetchLikers(postId) {
+  const { data, error } = await supabase.from('likes')
+    .select('created_at, profile:user_id(id,username,first_name,last_name,avatar_url)')
+    .eq('post_id', postId).order('created_at', { ascending: false }).limit(300)
+  if (error) throw error
+  return data.map((r) => r.profile).filter(Boolean)
+}
+
+export async function fetchLikedPosts(userId) {
+  const { data, error } = await supabase.from('likes').select(`created_at, post:post_id(${POST_SELECT})`)
+    .eq('user_id', userId).order('created_at', { ascending: false }).limit(120)
+  if (error) throw error
+  return data.map((r) => r.post && { ...r.post, liked_at: r.created_at }).filter(Boolean)
+}
+
+export function downloadPost(post) {
+  const url = post.video_url || post.image_url
+  const ext = (url.split('?')[0].split('.').pop() || (post.video_url ? 'mp4' : 'jpg')).toLowerCase()
+  const name = `videomove-${post.id.slice(0, 8)}.${ext}`
+  const a = document.createElement('a')
+  a.href = `${url}?download=${encodeURIComponent(name)}`
+  a.download = name
+  a.rel = 'noopener'
+  document.body.appendChild(a)
+  a.click()
+  a.remove()
 }

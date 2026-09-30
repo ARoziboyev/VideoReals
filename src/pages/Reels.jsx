@@ -11,12 +11,13 @@ import Spinner from '../components/common/Spinner'
 import Caption from '../components/video/Caption'
 import CommentsPanel from '../components/video/CommentsPanel'
 import { usePostActions } from '../components/video/VideoCard'
+import LikesModal from '../components/video/LikesModal'
+import ShareModal from '../components/video/ShareModal'
 import { useAuthStore } from '../store/authStore'
 import { useUIStore } from '../store/uiStore'
 import { useInView } from '../hooks/useInView'
 import * as videoService from '../services/videoService'
 import { getFollowingSet } from '../services/followService'
-import { shareUrl } from '../lib/share'
 import { cn, errorMessage, formatCount, fullName } from '../lib/utils'
 
 function ReelItem({ post, liked: l, saved: s, following, muted, setMuted }) {
@@ -26,6 +27,8 @@ function ReelItem({ post, liked: l, saved: s, following, muted, setMuted }) {
   const [paused, setPaused] = useState(false)
   const [burst, setBurst] = useState(false)
   const [comments, setComments] = useState(false)
+  const [showLikes, setShowLikes] = useState(false)
+  const [showShare, setShowShare] = useState(false)
   const lastTap = useRef(0)
   const author = post.profiles || {}
 
@@ -50,13 +53,14 @@ function ReelItem({ post, liked: l, saved: s, following, muted, setMuted }) {
     lastTap.current = now
   }
 
-  const Action = ({ icon: Icon, label, onClick, active, activeClass }) => (
-    <motion.button whileTap={{ scale: 0.8 }} onClick={onClick} className="flex flex-col items-center gap-1 text-white" aria-label={typeof label === 'string' ? label : undefined}>
-      <span className="grid h-12 w-12 place-items-center rounded-full bg-white/10 backdrop-blur-md">
+  const Action = ({ icon: Icon, label, onClick, onLabelClick, active, activeClass }) => (
+    <div className="flex flex-col items-center gap-1 text-white">
+      <motion.button whileTap={{ scale: 0.8 }} onClick={onClick} aria-label={typeof label === 'string' ? label : undefined}
+        className="grid h-12 w-12 place-items-center rounded-full border border-white/15 bg-white/10 backdrop-blur-xl">
         <Icon size={25} className={cn(active && activeClass)} fill={active ? 'currentColor' : 'none'} />
-      </span>
-      <span className="text-xs font-bold drop-shadow">{label}</span>
-    </motion.button>
+      </motion.button>
+      <button onClick={onLabelClick || onClick} className="text-xs font-bold drop-shadow">{label}</button>
+    </div>
   )
 
   return (
@@ -85,13 +89,15 @@ function ReelItem({ post, liked: l, saved: s, following, muted, setMuted }) {
           {post.caption && <Caption text={post.caption} className="mt-2.5 line-clamp-3 text-sm drop-shadow" />}
         </div>
         <div className="absolute bottom-24 right-3 flex flex-col items-center gap-4 md:bottom-6">
-          <Action icon={Heart} label={formatCount(likes)} onClick={() => toggleLike()} active={liked} activeClass="text-pink-500" />
+          <Action icon={Heart} label={formatCount(likes)} onClick={() => toggleLike()} onLabelClick={() => likes > 0 && setShowLikes(true)} active={liked} activeClass="text-pink-500" />
           <Action icon={MessageCircle} label={formatCount(post.comments_count)} onClick={() => setComments(true)} />
           <Action icon={Bookmark} label="Save" onClick={toggleSave} active={saved} />
-          <Action icon={Send} label="Share" onClick={() => shareUrl(`/p/${post.id}`, post.caption)} />
+          <Action icon={Send} label="Share" onClick={() => setShowShare(true)} />
         </div>
       </div>
       <CommentsPanel post={post} open={comments} onClose={() => setComments(false)} />
+      <LikesModal postId={post.id} open={showLikes} onClose={() => setShowLikes(false)} />
+      <ShareModal post={post} open={showShare} onClose={() => setShowShare(false)} />
     </section>
   )
 }

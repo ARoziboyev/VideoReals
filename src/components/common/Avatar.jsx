@@ -9,7 +9,7 @@ export default function Avatar({ src, name = '', size = 40, online = false, ring
   return (
     <div className={cn('relative shrink-0', className)} style={{ width: size, height: size }}>
       {ring ? (
-        <div className={cn('h-full w-full rounded-full p-[2.5px]', ring === 'seen' ? 'bg-fg/20' : 'gradient-ring')}>
+        <div className={cn('h-full w-full rounded-full p-[2.5px]', ring === 'seen' ? 'bg-fg/20' : ring === 'friends' ? 'friends-ring' : 'gradient-ring')}>
           <div className="h-full w-full rounded-full bg-base p-[2px]">{inner}</div>
         </div>
       ) : inner}

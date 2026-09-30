@@ -268,15 +268,19 @@ export default function LiveRoom() {
         </div>
 
         {phase === 'preview' ? (
-          <div className="absolute inset-x-0 bottom-0 space-y-3 bg-gradient-to-t from-black/85 to-transparent p-5" style={{ paddingBottom: 'max(1.25rem, env(safe-area-inset-bottom))' }}>
-            <input value={title} onChange={(e) => setTitle(e.target.value)} maxLength={120} placeholder="Add a title for your live"
-              className="w-full rounded-xl border border-white/20 bg-white/10 px-4 py-3 text-sm text-white outline-none backdrop-blur placeholder:text-white/60" />
-            <button onClick={goLive} className="btn-primary w-full py-3.5"><Radio size={18} /> Go live</button>
-          </div>
+          <>
+            <div className="pointer-events-none absolute inset-x-0 bottom-0 h-2/3 bg-gradient-to-t from-black/85 via-black/40 to-transparent" />
+            <div className="absolute inset-x-4 space-y-3 rounded-[1.75rem] border border-white/15 bg-white/10 p-4 backdrop-blur-2xl"
+              style={{ bottom: 'calc(max(1.5rem, env(safe-area-inset-bottom)) + 4.5rem)' }}>
+              <input value={title} onChange={(e) => setTitle(e.target.value)} maxLength={120} placeholder="Add a title for your live"
+                className="w-full rounded-xl border border-white/20 bg-black/25 px-4 py-3 text-sm text-white outline-none placeholder:text-white/60" />
+              <button onClick={goLive} className="btn-primary vm-sheen w-full py-3.5 text-base"><Radio size={19} /> Go live</button>
+            </div>
+          </>
         ) : phase === 'loading' ? (
           <div className="absolute inset-0 grid place-items-center"><Spinner className="text-white" size={28} /></div>
         ) : (
-          <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/85 via-black/40 to-transparent p-4 text-white" style={{ paddingBottom: 'max(1rem, env(safe-area-inset-bottom))' }}>
+          <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/85 via-black/40 to-transparent p-4 text-white" style={{ paddingBottom: 'max(1.5rem, calc(env(safe-area-inset-bottom) + 1rem))' }}>
             <div className="scrollbar-none mb-3 max-h-56 space-y-2 overflow-y-auto pr-16 [mask-image:linear-gradient(to_bottom,transparent,black_25%)]">
               {comments.map((c) => (
                 <motion.div key={c.id} initial={{ opacity: 0, x: -8 }} animate={{ opacity: 1, x: 0 }} className="flex items-start gap-2 text-sm">

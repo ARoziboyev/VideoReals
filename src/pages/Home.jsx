@@ -15,6 +15,7 @@ import { useUIStore } from '../store/uiStore'
 import { useInView } from '../hooks/useInView'
 import * as videoService from '../services/videoService'
 import { suggestedUsers } from '../services/profileService'
+import { fetchSponsored } from '../services/promotionService'
 import { errorMessage } from '../lib/utils'
 
 export default function Home() {
@@ -27,6 +28,7 @@ export default function Home() {
   const [hasMore, setHasMore] = useState(true)
   const [newCount, setNewCount] = useState(0)
   const [suggested, setSuggested] = useState([])
+  const [ads, setAds] = useState([])
   const [sentinel, sentinelVisible] = useInView({ threshold: 0, rootMargin: '600px' })
 
   const load = useCallback(async (reset = false) => {
@@ -44,7 +46,7 @@ export default function Home() {
     finally { setLoading(false) }
   }, [posts, user.id])
 
-  useEffect(() => { load(true); suggestedUsers(user.id).then(setSuggested).catch(() => {}) }, [])
+  useEffect(() => { load(true); suggestedUsers(user.id).then(setSuggested).catch(() => {}); fetchSponsored(3).then(setAds).catch(() => {}) }, [])
   useEffect(() => { if (sentinelVisible && hasMore && !loading) load() }, [sentinelVisible])
 
   useEffect(() => {
@@ -71,9 +73,15 @@ export default function Home() {
             </div>
           )}
           <div className="space-y-5 px-3 sm:px-0">
-            {posts.map((p) => (
-              <VideoCard key={p.id} post={p} liked={liked.has(p.id)} saved={saved.has(p.id)} onDeleted={(id) => setPosts((ps) => ps.filter((x) => x.id !== id))} />
-            ))}
+            {posts.map((p, i) => {
+              const ad = (i + 1) % 4 === 0 ? ads[(i + 1) / 4 - 1] : null
+              return (
+                <div key={p.id} className="space-y-5">
+                  <VideoCard post={p} liked={liked.has(p.id)} saved={saved.has(p.id)} onDeleted={(id) => setPosts((ps) => ps.filter((x) => x.id !== id))} />
+                  {ad && <VideoCard key={`ad-${ad.sponsored.promotionId}`} post={ad} />}
+                </div>
+              )
+            })}
           </div>
           {!loading && posts.length === 0 && (
             <EmptyState icon={Clapperboard} title="Your feed is empty" text="Upload the first video or follow people to fill it up."

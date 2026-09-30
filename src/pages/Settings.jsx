@@ -1,11 +1,19 @@
 import { useEffect, useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
-import { UserRound, Shield, Bell, Palette, Lock, Globe, Users, LogOut, ChevronRight, ArrowLeft, Moon, Sun, Monitor, Check, Plus, Trash2 } from 'lucide-react'
+import { UserRound, Shield, Bell, Palette, Lock, Globe, Users, LogOut, ChevronRight, ArrowLeft, Moon, Sun, Monitor, Check, Plus, Trash2, AtSign, HeartHandshake, Heart, Megaphone, UserPlus } from 'lucide-react'
 import toast from 'react-hot-toast'
 import Avatar from '../components/common/Avatar'
 import Modal from '../components/common/Modal'
 import Spinner from '../components/common/Spinner'
 import EditProfileModal from '../components/profile/EditProfileModal'
+import UsernameForm from '../components/profile/UsernameForm'
+import FriendsPicker from '../components/profile/FriendsPicker'
+import PostGrid from '../components/video/PostGrid'
+import AdsManager from '../components/ads/AdsManager'
+import EmptyState from '../components/common/EmptyState'
+import { PageLoader } from '../components/common/Spinner'
+import { fetchFriends, setFriends } from '../services/friendService'
+import { fetchLikedPosts } from '../services/videoService'
 import { useAuthStore } from '../store/authStore'
 import { useThemeStore } from '../store/themeStore'
 import { useUIStore } from '../store/uiStore'
@@ -81,6 +89,55 @@ function PrivacySection() {
       </div>
     </div>
   )
+}
+
+function UsernameSection() {
+  return (
+    <div className="max-w-md">
+      <p className="mb-4 text-sm text-fg/60">Your unique name on VideoMove. People use it to find you, mention you and open your profile.</p>
+      <UsernameForm />
+    </div>
+  )
+}
+
+function FriendsSection() {
+  const t = useT()
+  const user = useAuthStore((s) => s.user)
+  const [friends, setList] = useState(null)
+  const [picker, setPicker] = useState(false)
+  const load = () => fetchFriends(user.id).then(setList).catch((e) => { toast.error(errorMessage(e)); setList([]) })
+  useEffect(() => { load() }, [user.id])
+  const remove = async (id) => {
+    setList((l) => l.filter((f) => f.id !== id))
+    try { await setFriends(user.id, [], [id]) } catch (e) { toast.error(errorMessage(e)); load() }
+  }
+  return (
+    <div>
+      <div className="mb-4 flex flex-col gap-3 rounded-2xl bg-emerald-500/10 p-4 sm:flex-row sm:items-center">
+        <HeartHandshake size={22} className="shrink-0 text-emerald-400" />
+        <p className="flex-1 text-sm text-fg/70">Only people on this list see posts, stories and notes you share with “{t('friendsOnly')}”. They are not notified when you add or remove them.</p>
+        <button className="btn shrink-0 bg-emerald-500 text-white hover:bg-emerald-600" onClick={() => setPicker(true)}><UserPlus size={16} />{t('addFriend')}</button>
+      </div>
+      {!friends ? <PageLoader /> : friends.length === 0 ? <EmptyState icon={HeartHandshake} title="No friends yet" text="Add friends from your followers." />
+        : friends.map((f) => (
+          <div key={f.id} className="flex items-center gap-3 rounded-2xl px-2 py-2 hover:bg-fg/5">
+            <Avatar src={f.avatar_url} name={fullName(f)} size={44} ring="friends" />
+            <div className="min-w-0 flex-1"><p className="truncate text-sm font-bold">{f.username}</p><p className="truncate text-xs text-fg/50">{fullName(f)}</p></div>
+            <button className="btn-ghost py-1.5 text-xs" onClick={() => remove(f.id)}>Remove</button>
+          </div>
+        ))}
+      <FriendsPicker open={picker} onClose={() => setPicker(false)} onSaved={load} />
+    </div>
+  )
+}
+
+function LikesSection() {
+  const user = useAuthStore((s) => s.user)
+  const [posts, setPosts] = useState(null)
+  useEffect(() => { fetchLikedPosts(user.id).then(setPosts).catch((e) => { toast.error(errorMessage(e)); setPosts([]) }) }, [user.id])
+  if (!posts) return <PageLoader />
+  if (!posts.length) return <EmptyState icon={Heart} title="No likes yet" text="Every video and photo you like is saved here." />
+  return <><p className="mb-3 text-sm text-fg/55">{posts.length} posts you liked, newest first.</p><PostGrid posts={posts} /></>
 }
 
 const NOTIF_LABELS = { follow: 'New followers', like: 'Likes', comment: 'Comments', reply: 'Replies', mention: 'Mentions', message: 'Messages', story_like: 'Story likes', live: 'Live videos from people you follow' }
@@ -200,7 +257,11 @@ export default function Settings() {
   const [loggingOut, setLoggingOut] = useState(false)
   const sections = [
     ['account', UserRound, t('account'), AccountSection],
+    ['username', AtSign, t('username'), UsernameSection],
     ['privacy', Shield, t('privacy'), PrivacySection],
+    ['friends', HeartHandshake, t('friends'), FriendsSection],
+    ['likes', Heart, t('likeHistory'), LikesSection],
+    ['ads', Megaphone, t('ads'), AdsManager],
     ['notifications', Bell, t('notifications'), NotificationsSection],
     ['appearance', Palette, t('appearance'), AppearanceSection],
     ['security', Lock, t('security'), SecuritySection],

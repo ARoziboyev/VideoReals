@@ -2,6 +2,7 @@ import { NavLink } from 'react-router-dom'
 import { SquarePen, Users } from 'lucide-react'
 import Avatar from '../common/Avatar'
 import Spinner from '../common/Spinner'
+import NotesBar from './NotesBar'
 import { useAuthStore } from '../../store/authStore'
 import { useUIStore } from '../../store/uiStore'
 import { useT } from '../../lib/i18n'
@@ -17,6 +18,10 @@ function preview(msg, meId) {
   if (!msg) return 'No messages yet'
   const prefix = msg.sender_id === meId ? 'You: ' : ''
   if (msg.is_deleted) return `${prefix}Deleted message`
+  if (msg.message_type === 'call') {
+    const kind = msg.meta?.kind === 'video' ? 'Video call' : 'Voice call'
+    return `${msg.meta?.status === 'completed' ? '📞' : '📵'} ${kind}${msg.meta?.status === 'missed' ? ' · missed' : ''}`
+  }
   const labels = { image: '📷 Photo', video: '🎬 Video', voice: '🎤 Voice message', file: '📎 File' }
   return prefix + (msg.content || labels[msg.message_type] || '')
 }
@@ -33,6 +38,7 @@ export default function ConversationList({ conversations, loading, onNewChat }) 
         <button className="icon-btn" onClick={onNewChat} aria-label={t('newChat')}><SquarePen size={21} /></button>
       </div>
       <div className="thin-scroll flex-1 overflow-y-auto px-2 pb-28 md:pb-4">
+        <div className="-mx-2"><NotesBar /></div>
         {loading ? <div className="grid py-12 place-items-center"><Spinner /></div>
           : conversations.length === 0 ? (
             <div className="px-6 py-14 text-center">

@@ -72,3 +72,15 @@ export async function applyPendingAvatar(user) {
     return profile
   } catch { return null }
 }
+
+export async function uploadCover(userId, file, oldUrl) {
+  const url = await uploadFile('images', file, userId)
+  const profile = await updateProfile(userId, { cover_url: url })
+  if (oldUrl) removeByUrl(oldUrl, 'images').catch(() => {})
+  return profile
+}
+
+export async function isUsernameAvailable(username, selfId) {
+  const { data } = await supabase.from('profiles').select('id').eq('username', username.toLowerCase()).maybeSingle()
+  return !data || data.id === selfId
+}
